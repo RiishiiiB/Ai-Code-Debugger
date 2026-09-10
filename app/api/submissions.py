@@ -1,17 +1,21 @@
-from fastapi import APIRouter
-from fastapi import Depends
-from app.models.analysis_finding import AnalysisFinding
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.orm import Session
-from app.services.analysis_service import analyze_code
+
 from app.core.database import get_db
 from app.core.security import get_current_user
+
+from app.models.code_submission import CodeSubmission
+from app.models.analysis_finding import AnalysisFinding
+from app.models.ai_review import AIReview
+
 from app.schemas.code_submission import (
     CodeSubmissionCreate,
     CodeSubmissionResponse,
 )
-from app.models.code_submission import CodeSubmission
-from sqlalchemy import select
-from fastapi import HTTPException
+
+from app.services.analysis_service import analyze_code
+from app.services.gemini_service import generate_review
 
 
 router = APIRouter(
@@ -35,15 +39,14 @@ def create_submission(
         code=submission.code,
         language=submission.language,
     )
-    findings = []
-
-    findings = analyze_code(
-    submission.code,
-    submission.language,
-)
 
     db.add(new_submission)
     db.flush()
+
+    findings = analyze_code(
+        submission.code,
+        submission.language,
+    )
 
     for finding in findings:
         db.add(
@@ -60,10 +63,38 @@ def create_submission(
     db.commit()
     db.refresh(new_submission)
 
+    ai_review = generate_review(
+        submission.code,
+        findings,
+    )
+
+    db_ai_review = AIReview(
+        submission_id=new_submission.id,
+        explanation=ai_review.explanation,
+        concept=ai_review.concept,
+        why_it_matters=ai_review.why_it_matters,
+        hint=ai_review.hint,
+    )
+
+    db.add(db_ai_review)
+
+    new_submission.status = "completed"
+
+    db.commit()
+    db.refresh(new_submission)
+    db.refresh(db_ai_review)
+
     return {
-        **new_submission.__dict__,
+        "id": new_submission.id,
+        "user_id": new_submission.user_id,
+        "code": new_submission.code,
+        "language": new_submission.language,
+        "status": new_submission.status,
+        "created_at": new_submission.created_at,
         "findings": findings,
+        "ai_review": db_ai_review,
     }
+
 
 @router.get(
     "/{submission_id}",
@@ -95,7 +126,19 @@ def get_submission(
         )
     ).scalars().all()
 
+    ai_review = db.execute(
+        select(AIReview).where(
+            AIReview.submission_id == submission_id
+        )
+    ).scalar_one_or_none()
+
     return {
-        **submission.__dict__,
+        "id": submission.id,
+        "user_id": submission.user_id,
+        "code": submission.code,
+        "language": submission.language,
+        "status": submission.status,
+        "created_at": submission.created_at,
         "findings": findings,
+        "ai_review": ai_review,
     }

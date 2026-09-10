@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 from app.schemas.finding import Finding
-
+from app.schemas.ai_review import AIReview
 class CodeSubmissionCreate(BaseModel):
     code: str
     language: str
@@ -16,6 +16,7 @@ class CodeSubmissionResponse(BaseModel):
     status: str
     created_at: datetime
     findings: list[Finding]
+    ai_review: AIReview
 
     model_config = {
         "from_attributes": True
