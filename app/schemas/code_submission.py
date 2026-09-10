@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel
-
+from app.schemas.finding import Finding
 
 class CodeSubmissionCreate(BaseModel):
     code: str
@@ -15,6 +15,7 @@ class CodeSubmissionResponse(BaseModel):
     language: str
     status: str
     created_at: datetime
+    findings: list[Finding]
 
     model_config = {
         "from_attributes": True
