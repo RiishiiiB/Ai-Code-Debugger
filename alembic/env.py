@@ -4,7 +4,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-
+from app.models.analysis_finding import AnalysisFinding
 import os
 
 from dotenv import load_dotenv
