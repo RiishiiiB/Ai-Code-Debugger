@@ -16,7 +16,7 @@ class CodeSubmissionResponse(BaseModel):
     status: str
     created_at: datetime
     findings: list[Finding]
-    ai_review: AIReview
+    ai_review: AIReview | None = None
 
     model_config = {
         "from_attributes": True

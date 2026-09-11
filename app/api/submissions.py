@@ -5,17 +5,17 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_current_user
 
+from app.models.ai_review import AIReview
 from app.models.code_submission import CodeSubmission
 from app.models.analysis_finding import AnalysisFinding
-from app.models.ai_review import AIReview
+
+from app.services.ai_tasks import process_ai_review
+from app.services.analysis_service import analyze_code
 
 from app.schemas.code_submission import (
     CodeSubmissionCreate,
     CodeSubmissionResponse,
 )
-
-from app.services.analysis_service import analyze_code
-from app.services.gemini_service import generate_review
 
 
 router = APIRouter(
@@ -38,6 +38,7 @@ def create_submission(
         user_id=current_user_id,
         code=submission.code,
         language=submission.language,
+        status="processing",
     )
 
     db.add(new_submission)
@@ -63,26 +64,7 @@ def create_submission(
     db.commit()
     db.refresh(new_submission)
 
-    ai_review = generate_review(
-        submission.code,
-        findings,
-    )
-
-    db_ai_review = AIReview(
-        submission_id=new_submission.id,
-        explanation=ai_review.explanation,
-        concept=ai_review.concept,
-        why_it_matters=ai_review.why_it_matters,
-        hint=ai_review.hint,
-    )
-
-    db.add(db_ai_review)
-
-    new_submission.status = "completed"
-
-    db.commit()
-    db.refresh(new_submission)
-    db.refresh(db_ai_review)
+    process_ai_review.delay(new_submission.id)
 
     return {
         "id": new_submission.id,
@@ -92,7 +74,7 @@ def create_submission(
         "status": new_submission.status,
         "created_at": new_submission.created_at,
         "findings": findings,
-        "ai_review": db_ai_review,
+        "ai_review": None,
     }
 
 
@@ -120,17 +102,24 @@ def get_submission(
             detail="Submission not found",
         )
 
-    findings = db.execute(
-        select(AnalysisFinding).where(
-            AnalysisFinding.submission_id == submission_id
+    findings = (
+        db.execute(
+            select(AnalysisFinding).where(
+                AnalysisFinding.submission_id == submission_id
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
-    ai_review = db.execute(
-        select(AIReview).where(
-            AIReview.submission_id == submission_id
+    ai_review = (
+        db.execute(
+            select(AIReview).where(
+                AIReview.submission_id == submission_id
+            )
         )
-    ).scalar_one_or_none()
+        .scalar_one_or_none()
+    )
 
     return {
         "id": submission.id,
