@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -15,6 +15,7 @@ from app.services.analysis_service import analyze_code
 from app.schemas.code_submission import (
     CodeSubmissionCreate,
     CodeSubmissionResponse,
+    CodeSubmissionListItem,
 )
 
 
@@ -131,3 +132,22 @@ def get_submission(
         "findings": findings,
         "ai_review": ai_review,
     }
+@router.get(
+    "/",
+    response_model=list[CodeSubmissionListItem],
+)
+def list_submissions(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user),
+):
+    result = db.execute(
+        select(CodeSubmission)
+        .where(CodeSubmission.user_id == current_user_id)
+        .order_by(CodeSubmission.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+
+    return result.scalars().all()
