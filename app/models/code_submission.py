@@ -1,6 +1,6 @@
 from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
-from datetime import datetime
+from datetime import datetime, timezone
 from app.models.base import Base
 
 
@@ -27,6 +27,6 @@ class CodeSubmission(Base):
         default="pending",
     )
     created_at: Mapped[datetime] = mapped_column(
-    default=datetime.utcnow,
+    default=lambda: datetime.now(timezone.utc),
     nullable=False,
 )
