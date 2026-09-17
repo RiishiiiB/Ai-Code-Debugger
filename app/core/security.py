@@ -1,4 +1,8 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import jwt
 from pwdlib import PasswordHash
 from datetime import datetime, timedelta, timezone
