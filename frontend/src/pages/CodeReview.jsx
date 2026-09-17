@@ -21,6 +21,7 @@ function CodeReview() {
     try {
       const result = await createSubmission(code, language)
       setSubmission(result)
+    // eslint-disable-next-line no-unused-vars
     } catch (error) {
       setError('Failed to analyze code.')
       setLoading(false)
@@ -30,6 +31,7 @@ function CodeReview() {
   useEffect(() => {
     if (!submission?.id || submission.status === 'completed') {
       if (submission?.status === 'completed') {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoading(false)
       }
       return
@@ -48,6 +50,7 @@ function CodeReview() {
           setLoading(false)
           clearInterval(interval)
         }
+      // eslint-disable-next-line no-unused-vars
       } catch (error) {
         setError('Failed to fetch analysis.')
         setLoading(false)

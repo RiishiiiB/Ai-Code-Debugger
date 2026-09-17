@@ -5,7 +5,8 @@ import Dashboard from './pages/dashboard'
 import Login from './pages/login'
 import ProtectedRoute from './routes/ProtectedRoute'
 import CodeReview from './pages/CodeReview'
-
+import History from './pages/History'
+import ReviewDetails from './pages/ReviewDetails'
 function AppLayout() {
   return (
     <div className="flex min-h-screen bg-background text-white">
@@ -19,6 +20,8 @@ function AppLayout() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/code-review" element={<CodeReview />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/history/:submissionId" element={<ReviewDetails />} />
           </Routes>
         </main>
       </div>

@@ -54,3 +54,18 @@ export async function getSubmission(submissionId) {
 
   return response.json()
 }
+export async function getSubmissionHistory() {
+  const token = localStorage.getItem('access_token')
+
+  const response = await fetch(`${API_URL}/submissions/`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch submission history')
+  }
+
+  return response.json()
+}
