@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.users import router as users_router
 from app.api.submissions import router as submissions_router
 from app.api.dashboard import router as dashboard_router
+from app.api.learning import router as learning_router
 load_dotenv()
 
 app = FastAPI()
@@ -19,6 +20,7 @@ app.add_middleware(
 app.include_router(users_router)
 app.include_router(submissions_router)
 app.include_router(dashboard_router)
+app.include_router(learning_router)
 @app.get("/health")
 def health_check():
     return {

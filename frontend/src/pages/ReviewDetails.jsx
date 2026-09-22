@@ -34,17 +34,30 @@ function ReviewDetails() {
         ← Back to History
       </button>
 
-      <h1 className="text-3xl font-bold">
-        Review #{submission.id}
-      </h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">
+            Review #{submission.id}
+          </h1>
 
-      <p className="mt-2 text-slate-400">
-        {submission.language} • {submission.status}
-      </p>
+          <p className="mt-2 text-slate-400">
+            {submission.language} • {submission.status}
+          </p>
+        </div>
+
+        {submission.ai_review && (
+          <button
+            onClick={() => navigate(`/learning/${submission.id}`)}
+            className="bg-brand text-slate-950 font-semibold px-5 py-3 rounded-lg hover:bg-brand-dark"
+          >
+            Start Learning
+          </button>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
 
-        {/* Code */}
+        {/* Submitted Code */}
         <div className="bg-surface border border-slate-800 rounded-xl p-6">
           <h2 className="font-semibold mb-4">
             Submitted Code

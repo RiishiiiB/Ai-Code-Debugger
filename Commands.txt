@@ -1,0 +1,9 @@
+frontend
+npm run dev
+celery:
+celery -A app.services.celery_app worker --pool=solo --loglevel=info
+Ubuntu:
+sudo service redis-server start
+redis-cli ping
+FastApi:
+uvicorn app.main:app --reload

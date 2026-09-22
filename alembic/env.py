@@ -5,6 +5,7 @@ from sqlalchemy import pool
 from app.models.ai_review import AIReview
 from alembic import context
 from app.models.analysis_finding import AnalysisFinding
+from app.models.learning_attempt import LearningAttempt
 import os
 
 from dotenv import load_dotenv

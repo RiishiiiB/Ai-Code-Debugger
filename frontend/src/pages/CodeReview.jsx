@@ -73,7 +73,6 @@ function CodeReview() {
 
         {/* Code Editor */}
         <div className="bg-surface border border-slate-800 rounded-xl p-6">
-
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold">Your Code</h2>
 
@@ -100,12 +99,10 @@ function CodeReview() {
           >
             {loading ? 'Analyzing...' : 'Analyze Code'}
           </button>
-
         </div>
 
-        {/* Review */}
+        {/* Review Panel */}
         <div className="bg-surface border border-slate-800 rounded-xl p-6">
-
           <h2 className="font-semibold mb-6">Review</h2>
 
           {error && (
@@ -125,22 +122,40 @@ function CodeReview() {
           {submission && (
             <div className="space-y-6">
 
+              {/* Processing State */}
+              {submission.status === 'processing' && (
+                <div className="border border-cyan/30 rounded-lg p-4">
+                  <p className="text-cyan font-semibold">
+                    Analyzing your code...
+                  </p>
+
+                  <p className="text-slate-400 text-sm mt-2">
+                    Static analysis is complete. Your AI learning review is
+                    being prepared.
+                  </p>
+                </div>
+              )}
+
               {/* Status */}
               <div>
-                <p className="text-slate-400 text-sm">Status</p>
+                <p className="text-slate-400 text-sm">
+                  Status
+                </p>
 
                 <p
                   className={
                     submission.status === 'completed'
                       ? 'text-brand font-medium mt-1'
-                      : 'text-cyan font-medium mt-1'
+                      : submission.status === 'failed'
+                        ? 'text-red-400 font-medium mt-1'
+                        : 'text-cyan font-medium mt-1'
                   }
                 >
                   {submission.status}
                 </p>
               </div>
 
-              {/* Static Findings */}
+              {/* Findings */}
               <div>
                 <p className="text-slate-400 text-sm mb-3">
                   Issues Found
@@ -176,7 +191,7 @@ function CodeReview() {
                 )}
               </div>
 
-              {/* AI Review */}
+              {/* AI Learning Review */}
               {submission.ai_review && (
                 <div className="space-y-4">
 
@@ -225,7 +240,6 @@ function CodeReview() {
 
             </div>
           )}
-
         </div>
       </div>
     </div>

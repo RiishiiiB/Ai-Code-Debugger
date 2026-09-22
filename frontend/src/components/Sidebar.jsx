@@ -38,6 +38,7 @@ function Sidebar() {
         </button>
 
         <button
+        onClick={() => navigate('/learning')}
           className="w-full text-left px-4 py-3 rounded-lg hover:bg-surface"
         >
           Learning
