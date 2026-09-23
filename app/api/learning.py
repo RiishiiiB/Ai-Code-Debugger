@@ -31,10 +31,6 @@ def create_learning_attempt(
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user),
 ):
-    # ---------------------------------------------------------
-    # 1. Find the original submission
-    # ---------------------------------------------------------
-
     submission = db.get(
         CodeSubmission,
         attempt.submission_id,
@@ -46,19 +42,27 @@ def create_learning_attempt(
             detail="Submission not found",
         )
 
-    # ---------------------------------------------------------
-    # 2. Verify ownership
-    # ---------------------------------------------------------
-
     if submission.user_id != current_user_id:
         raise HTTPException(
             status_code=403,
             detail="You are not allowed to access this submission",
         )
 
-    # ---------------------------------------------------------
-    # 3. Analyze the learner's attempted code
-    # ---------------------------------------------------------
+    # Prevent new attempts after the learner has already fixed the problem.
+    existing_fixed_attempt = (
+        db.query(LearningAttempt)
+        .filter(
+            LearningAttempt.submission_id == attempt.submission_id,
+            LearningAttempt.fixed.is_(True),
+        )
+        .first()
+    )
+
+    if existing_fixed_attempt is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="This problem has already been fixed",
+        )
 
     findings = analyze_learning_attempt(
         attempt.attempted_code,
@@ -66,10 +70,6 @@ def create_learning_attempt(
     )
 
     fixed = len(findings) == 0
-
-    # ---------------------------------------------------------
-    # 4. Save the learning attempt
-    # ---------------------------------------------------------
 
     new_attempt = LearningAttempt(
         submission_id=attempt.submission_id,
@@ -79,14 +79,7 @@ def create_learning_attempt(
     )
 
     db.add(new_attempt)
-
-    # Flush so SQLAlchemy generates the attempt ID
-    # before we create the feedback record.
     db.flush()
-
-    # ---------------------------------------------------------
-    # 5. Get the original static-analysis findings
-    # ---------------------------------------------------------
 
     original_findings = (
         db.query(AnalysisFinding)
@@ -97,19 +90,11 @@ def create_learning_attempt(
         .all()
     )
 
-    # ---------------------------------------------------------
-    # 6. Generate AI learning feedback
-    # ---------------------------------------------------------
-
     feedback_data = generate_learning_feedback(
         thinking=attempt.thinking,
         attempted_code=attempt.attempted_code,
         findings=original_findings,
     )
-
-    # ---------------------------------------------------------
-    # 7. Save AI feedback
-    # ---------------------------------------------------------
 
     feedback = LearningFeedback(
         attempt_id=new_attempt.id,
@@ -125,10 +110,6 @@ def create_learning_attempt(
 
     db.refresh(new_attempt)
     db.refresh(feedback)
-
-    # ---------------------------------------------------------
-    # 8. Return the complete learning result
-    # ---------------------------------------------------------
 
     return {
         "id": new_attempt.id,
