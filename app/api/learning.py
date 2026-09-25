@@ -71,45 +71,50 @@ def create_learning_attempt(
 
     fixed = len(findings) == 0
 
-    new_attempt = LearningAttempt(
-        submission_id=attempt.submission_id,
-        thinking=attempt.thinking,
-        attempted_code=attempt.attempted_code,
-        fixed=fixed,
-    )
-
-    db.add(new_attempt)
-    db.flush()
-
-    original_findings = (
-        db.query(AnalysisFinding)
-        .filter(
-            AnalysisFinding.submission_id
-            == attempt.submission_id
+    try:
+        new_attempt = LearningAttempt(
+            submission_id=attempt.submission_id,
+            thinking=attempt.thinking,
+            attempted_code=attempt.attempted_code,
+            fixed=fixed,
         )
-        .all()
-    )
 
-    feedback_data = generate_learning_feedback(
-        thinking=attempt.thinking,
-        attempted_code=attempt.attempted_code,
-        findings=original_findings,
-    )
+        db.add(new_attempt)
+        db.flush()
 
-    feedback = LearningFeedback(
-        attempt_id=new_attempt.id,
-        understanding=feedback_data["understanding"],
-        missed_concept=feedback_data["missed_concept"],
-        better_thinking=feedback_data["better_thinking"],
-        reinforcement=feedback_data["reinforcement"],
-    )
+        original_findings = (
+            db.query(AnalysisFinding)
+            .filter(
+                AnalysisFinding.submission_id
+                == attempt.submission_id
+            )
+            .all()
+        )
 
-    db.add(feedback)
+        feedback_data = generate_learning_feedback(
+            thinking=attempt.thinking,
+            attempted_code=attempt.attempted_code,
+            findings=original_findings,
+        )
 
-    db.commit()
+        feedback = LearningFeedback(
+            attempt_id=new_attempt.id,
+            understanding=feedback_data["understanding"],
+            missed_concept=feedback_data["missed_concept"],
+            better_thinking=feedback_data["better_thinking"],
+            reinforcement=feedback_data["reinforcement"],
+        )
 
-    db.refresh(new_attempt)
-    db.refresh(feedback)
+        db.add(feedback)
+
+        db.commit()
+
+        db.refresh(new_attempt)
+        db.refresh(feedback)
+
+    except Exception:
+        db.rollback()
+        raise
 
     return {
         "id": new_attempt.id,
