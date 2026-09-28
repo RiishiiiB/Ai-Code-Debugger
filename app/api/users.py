@@ -12,7 +12,7 @@ from app.core.security import (
     get_current_user,
 )
 from app.models.user import User
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.user import (UserCreate, UserResponse, TokenResponse, )
 
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -76,7 +76,9 @@ def create_user(
     return new_user
 
 
-@router.post("/login")
+@router.post(
+        "/login",
+        response_model=TokenResponse,)
 def login(
     user: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
